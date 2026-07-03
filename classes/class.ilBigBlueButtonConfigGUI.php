@@ -71,10 +71,8 @@ class ilBigBlueButtonConfigGUI extends ilPluginConfigGUI
             'sess_enable_max_concurrent' => 0,
             'enable_userlimit' => 0,
             'sess_max_concurrent' => 0,
-            'sess_msg_concurrent' => ''
-
-
-
+            'sess_msg_concurrent' => '',
+            'curl_timeout' => 10,
         );
         $result = $ilDB->query("SELECT * FROM rep_robj_xbbb_conf");
         while ($record = $ilDB->fetchAssoc($result)) {
@@ -86,14 +84,19 @@ class ilBigBlueButtonConfigGUI extends ilPluginConfigGUI
             $values["enable_userlimit"] = $record["enable_userlimit"];
             $values["sess_max_concurrent"] = $record["sess_max_concurrent"];
             $values["sess_msg_concurrent"] = $record["sess_msg_concurrent"];
+            $values["curl_timeout"] = (int) ($record["curl_timeout"] ?? 10);
         }
 
 
         $pl = $this->getPluginObject();
         if (count($values) > 0 && $values["svrpublicurl"] != '' && $values["svrsalt"] != '') {
-            $server_reachable=$this->isServerReachable($values["svrpublicurl"], $values["svrsalt"]);
+            $server_reachable = $this->isServerReachable($values["svrpublicurl"], $values["svrsalt"]);
             if (!$server_reachable) {
-                $this->tpl->setOnScreenMessage(ilGlobalTemplateInterface::MESSAGE_TYPE_FAILURE, "sever_not_reachable", true );
+                $this->tpl->setOnScreenMessage(
+                    ilGlobalTemplateInterface::MESSAGE_TYPE_FAILURE,
+                    $pl->txt("sever_not_reachable"),
+                    true
+                );
             }
         }
 
@@ -168,6 +171,16 @@ class ilBigBlueButtonConfigGUI extends ilPluginConfigGUI
 
         $form->addItem($sess);
 
+        // connection timeout
+        $timeout_input = new ilNumberInputGUI($pl->txt("curl_timeout"), "curl_timeout");
+        $timeout_input->setRequired(true);
+        $timeout_input->setMinValue(1);
+        $timeout_input->setMaxValue(120);
+        $timeout_input->setSize(5);
+        $timeout_input->setInfo($pl->txt("curl_timeout_info"));
+        $timeout_input->setValue($values["curl_timeout"]);
+        $form->addItem($timeout_input);
+
         $form->addCommandButton("save", $lng->txt("save"));
 
         $form->setTitle($pl->txt("BigBlueButton_plugin_configuration"));
@@ -188,42 +201,45 @@ class ilBigBlueButtonConfigGUI extends ilPluginConfigGUI
         $form = $this->initConfigurationForm();
         if ($form->checkInput()) {
             $setPublicURL = $this->checkUrl($form->getInput("frmpublicurl"));
-            $setSalt= $form->getInput("frmsalt");
+            $setSalt = $form->getInput("frmsalt");
             $choose_recording = (int) $form->getInput("choose_recording");
             $guest_global_choose = (int) $form->getInput("guest_global_choose");
             $sess_enable_max_concurrent = (int) $form->getInput("sess_enable_max_concurrent");
             $enable_userlimit = (int) $form->getInput("enable_userlimit");
             $sess_max_concurrent = (int) $form->getInput("sess_max_concurrent");
             $sess_msg_concurrent = $form->getInput("sess_msg_concurrent");
+            $curl_timeout = max(1, (int) $form->getInput("curl_timeout"));
 
-            // check if data exisits decide to update or insert
+            // check if data exists -- decide to update or insert
             $result = $ilDB->query("SELECT * FROM rep_robj_xbbb_conf");
             $num = $ilDB->numRows($result);
             if ($num == 0) {
                 $ilDB->manipulate("INSERT INTO rep_robj_xbbb_conf ".
-                "(id, svrpublicurl, svrsalt, choose_recording, guestglobalchoose, sess_enable_max_concurrent, enable_userlimit, sess_max_concurrent, sess_msg_concurrent ) VALUES (".
-                $ilDB->quote(1, "integer").",". // id
-                $ilDB->quote($setPublicURL, "text").",". //public url
-                $ilDB->quote($setSalt, "text").",". //salt
+                "(id, svrpublicurl, svrsalt, choose_recording, guestglobalchoose, sess_enable_max_concurrent, enable_userlimit, sess_max_concurrent, sess_msg_concurrent, curl_timeout) VALUES (".
+                $ilDB->quote(1, "integer").",".
+                $ilDB->quote($setPublicURL, "text").",".
+                $ilDB->quote($setSalt, "text").",".
                 $ilDB->quote($choose_recording, "integer").",".
-                $ilDB->quote($guest_global_choose, "integer"). ", ".
-                $ilDB->quote($sess_enable_max_concurrent, "integer"). ", ".
-                $ilDB->quote($enable_userlimit, "integer"). ", ".
-                $ilDB->quote($sess_max_concurrent, "integer"). ", ".
-                $ilDB->quote($sess_msg_concurrent, "text"). 
+                $ilDB->quote($guest_global_choose, "integer").", ".
+                $ilDB->quote($sess_enable_max_concurrent, "integer").", ".
+                $ilDB->quote($enable_userlimit, "integer").", ".
+                $ilDB->quote($sess_max_concurrent, "integer").", ".
+                $ilDB->quote($sess_msg_concurrent, "text").", ".
+                $ilDB->quote($curl_timeout, "integer").
                 ")");
             } else {
                 $ilDB->manipulate(
-                    $up = "UPDATE rep_robj_xbbb_conf  SET ".
-                " svrpublicurl = ".$ilDB->quote($setPublicURL, "text").",".
-                " svrsalt = ".$ilDB->quote($setSalt, "text"). ",".
-                " choose_recording = ".$ilDB->quote($choose_recording, "integer"). ",".
-                "guestglobalchoose = ". $ilDB->quote($guest_global_choose, "integer"). ", ".
-                "sess_enable_max_concurrent = ". $ilDB->quote($sess_enable_max_concurrent, "integer"). ", ".
-                "enable_userlimit = ". $ilDB->quote($enable_userlimit, "integer"). ", ".
-                "sess_max_concurrent = ". $ilDB->quote($sess_max_concurrent, "integer"). ", ".
-                "sess_msg_concurrent = ". $ilDB->quote($sess_msg_concurrent, "text"). 
-                " WHERE id = ".$ilDB->quote(1, "integer")
+                    "UPDATE rep_robj_xbbb_conf SET ".
+                    " svrpublicurl = ".$ilDB->quote($setPublicURL, "text").",".
+                    " svrsalt = ".$ilDB->quote($setSalt, "text").",".
+                    " choose_recording = ".$ilDB->quote($choose_recording, "integer").",".
+                    " guestglobalchoose = ".$ilDB->quote($guest_global_choose, "integer").", ".
+                    " sess_enable_max_concurrent = ".$ilDB->quote($sess_enable_max_concurrent, "integer").", ".
+                    " enable_userlimit = ".$ilDB->quote($enable_userlimit, "integer").", ".
+                    " sess_max_concurrent = ".$ilDB->quote($sess_max_concurrent, "integer").", ".
+                    " sess_msg_concurrent = ".$ilDB->quote($sess_msg_concurrent, "text").", ".
+                    " curl_timeout = ".$ilDB->quote($curl_timeout, "integer").
+                    " WHERE id = ".$ilDB->quote(1, "integer")
                 );
             }
             $this->tpl->setOnScreenMessage(ilGlobalTemplateInterface::MESSAGE_TYPE_SUCCESS, $pl->txt("saving_invoked"), true);

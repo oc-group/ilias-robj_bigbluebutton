@@ -94,6 +94,7 @@ class ilObjBigBlueButton extends ilObjectPlugin
     private bool $online = false;
     private string $svrPublicUrl = '';
     private string $svrSalt = '';
+    private int $curlTimeout = 10;
     private string $attendeePwd = '';
     private string $moderatorPwd = '';
     private string $welcomeText = '';
@@ -162,6 +163,7 @@ class ilObjBigBlueButton extends ilObjectPlugin
             $this->enableMaxConcurrentSession((bool) $record['sess_enable_max_concurrent']);
             $this->setMaxConcurrentSessions((int) $record['sess_max_concurrent']);
             $this->setMaxConcurrentSessionsMsg($record['sess_msg_concurrent'] ?? '');
+            $this->setCurlTimeout((int) ($record['curl_timeout'] ?? 10));
         }
     }
 
@@ -202,6 +204,7 @@ class ilObjBigBlueButton extends ilObjectPlugin
             $this->enableMaxConcurrentSession((bool) $record['sess_enable_max_concurrent']);
             $this->setMaxConcurrentSessions((int) $record['sess_max_concurrent']);
             $this->setMaxConcurrentSessionsMsg($record['sess_msg_concurrent'] ?? '');
+            $this->setCurlTimeout((int) ($record['curl_timeout'] ?? 10));
         }
     }
 
@@ -687,6 +690,16 @@ class ilObjBigBlueButton extends ilObjectPlugin
     public function getMaxConcurrentSessionsMsg()
     {
         return $this->max_concurrent_sessions_msg;
+    }
+
+    public function setCurlTimeout(int $timeout): void
+    {
+        $this->curlTimeout = max(1, $timeout);
+    }
+
+    public function getCurlTimeout(): int
+    {
+        return $this->curlTimeout;
     }
 
 }
