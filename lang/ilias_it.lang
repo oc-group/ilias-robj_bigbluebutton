@@ -92,3 +92,4 @@ max_duration#:#Durata massima della riunione
 guest_invite_info#:#Puoi invitare ospiti tramite il seguente link:
 allow_download#:#Consenti download
 allow_download_info#:#Per il download delle registrazioni è necessario installare un componente aggiuntivo sul server BBB. Consulta lo script su <a href="https://github.com/Minervis-GmbH/video-export">https://github.com/Minervis-GmbH/video-export</a>
+bbb_connection_error#:#Il server BigBlueButton non è raggiungibile al momento. Riprovare più tardi o contattare l'amministratore.

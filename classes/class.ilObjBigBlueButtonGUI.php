@@ -46,6 +46,7 @@
 class ilObjBigBlueButtonGUI extends ilObjectPluginGUI
 {
     private ?ilPropertyFormGUI $form = null;
+    private ?ilLogger $logger = null;
     public bool $has_meeting_recordings = false;
 
     /**
@@ -55,6 +56,7 @@ class ilObjBigBlueButtonGUI extends ilObjectPluginGUI
     {
         // $this->tpl->addCss("./public/Customizing/global/plugins/Services/Repository/RepositoryObject/BigBlueButton/templates/bbb.css");
         $this->tpl->addCss($this->getPlugin()->getDirectory() . '/templates/bbb.css');
+        $this->logger = ilLoggerFactory::getLogger('xbbb');
     }
 
     /**
@@ -307,7 +309,15 @@ class ilObjBigBlueButtonGUI extends ilObjectPluginGUI
             $isModerator=true;
         }
 
-        $BBBHelper=new ilBigBlueButtonProtocol($this->object);
+        $BBBHelper = new ilBigBlueButtonProtocol($this->object);
+
+        if ($BBBHelper->hasConnectionError()) {
+            $this->tpl->setOnScreenMessage(
+                ilGlobalTemplateInterface::MESSAGE_TYPE_FAILURE,
+                $this->txt("bbb_connection_error")
+            );
+            return;
+        }
 
         $available_sessions = $BBBHelper->getMaximumSessionsAvailable();
         //$BBBHelper->getMeetings();
@@ -387,7 +397,10 @@ class ilObjBigBlueButtonGUI extends ilObjectPluginGUI
     private function buildRecordingUI()
     {
         global $DIC;
-        $BBBHelper=new ilBigBlueButtonProtocol($this->object);
+        $BBBHelper = new ilBigBlueButtonProtocol($this->object);
+        if ($BBBHelper->hasConnectionError()) {
+            return '';
+        }
         $table_template = new ilTemplate(
                 "tpl.BigBlueButtonRecordTable.html",
                 true,
@@ -473,8 +486,16 @@ class ilObjBigBlueButtonGUI extends ilObjectPluginGUI
         //$ilTabs->clearTargets();
         $ilTabs->activateTab("content");
 
-        $BBBHelper=new ilBigBlueButtonProtocol($this->object);
-        $BBBHelper->endMeeting($this->object);
+        $BBBHelper = new ilBigBlueButtonProtocol($this->object);
+        try {
+            $BBBHelper->endMeeting($this->object);
+        } catch (Exception $e) {
+            $this->logger->error("Error ending meeting: " . $e->getMessage());
+            $this->tpl->setOnScreenMessage(
+                ilGlobalTemplateInterface::MESSAGE_TYPE_FAILURE,
+                $this->txt("bbb_connection_error")
+            );
+        }
 
         //$this->object->incSequence();
 
@@ -492,9 +513,28 @@ class ilObjBigBlueButtonGUI extends ilObjectPluginGUI
         $ilTabs->activateTab("content");
 
 
-        $BBBHelper=new ilBigBlueButtonProtocol($this->object);
+        $BBBHelper = new ilBigBlueButtonProtocol($this->object);
 
-        $BBBHelper->createMeeting($this->object, isset($_POST["recordmeeting"]));
+        if ($BBBHelper->hasConnectionError()) {
+            $this->tpl->setOnScreenMessage(
+                ilGlobalTemplateInterface::MESSAGE_TYPE_FAILURE,
+                $this->txt("bbb_connection_error")
+            );
+            $this->showContent();
+            return;
+        }
+
+        try {
+            $BBBHelper->createMeeting($this->object, isset($_POST["recordmeeting"]));
+        } catch (Exception $e) {
+            $this->logger->error("Error starting meeting: " . $e->getMessage());
+            $this->tpl->setOnScreenMessage(
+                ilGlobalTemplateInterface::MESSAGE_TYPE_FAILURE,
+                $this->txt("bbb_connection_error")
+            );
+            $this->showContent();
+            return;
+        }
 
         $my_tpl = new ilTemplate("../tpl.BigBlueButtonModeratorMeetingCreated.html", true, true, "public/Customizing/global/plugins/Services/Repository/RepositoryObject/BigBlueButton");
 
@@ -517,8 +557,16 @@ class ilObjBigBlueButtonGUI extends ilObjectPluginGUI
 
         $recordID = filter_input(INPUT_GET, "recordID");
 
-        $BBBHelper=new ilBigBlueButtonProtocol($this->object);
-        $BBBHelper->deleteRecording($this->object, $recordID);
+        $BBBHelper = new ilBigBlueButtonProtocol($this->object);
+        try {
+            $BBBHelper->deleteRecording($this->object, $recordID);
+        } catch (Exception $e) {
+            $this->logger->error("Error deleting recording: " . $e->getMessage());
+            $this->tpl->setOnScreenMessage(
+                ilGlobalTemplateInterface::MESSAGE_TYPE_FAILURE,
+                $this->txt("bbb_connection_error")
+            );
+        }
         $this->showContent();
     }
 
@@ -533,11 +581,19 @@ class ilObjBigBlueButtonGUI extends ilObjectPluginGUI
         global $ilCtrl;
 
 
-        $BBBHelper= new ilBigBlueButtonProtocol($this->object);
-         $recordID = filter_input(INPUT_GET, "recordID");
-         $publish = boolval(filter_input(INPUT_GET, "publish"));
+        $BBBHelper = new ilBigBlueButtonProtocol($this->object);
+        $recordID = filter_input(INPUT_GET, "recordID");
+        $publish = boolval(filter_input(INPUT_GET, "publish"));
 
-        $BBBHelper->publishRecordings($this->object,$recordID, $publish );
+        try {
+            $BBBHelper->publishRecordings($this->object, $recordID, $publish);
+        } catch (Exception $e) {
+            $this->logger->error("Error publishing recording: " . $e->getMessage());
+            $this->tpl->setOnScreenMessage(
+                ilGlobalTemplateInterface::MESSAGE_TYPE_FAILURE,
+                $this->txt("bbb_connection_error")
+            );
+        }
 
         $ilCtrl->redirect($this, "showContent");
 
