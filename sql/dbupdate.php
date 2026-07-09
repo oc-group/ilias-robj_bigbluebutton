@@ -360,14 +360,3 @@ if (!$ilDB->tableColumnExists("rep_robj_xbbb_conf", "sess_msg_concurrent")
 
 }
 ?>
-<#11>
-<?php
-if (!$ilDB->tableColumnExists("rep_robj_xbbb_conf", "curl_timeout")) {
-	$ilDB->addTableColumn('rep_robj_xbbb_conf', 'curl_timeout', array(
-		'type' => 'integer',
-		'length' => 4,
-		'notnull' => false,
-		'default' => 10
-	));
-}
-?>

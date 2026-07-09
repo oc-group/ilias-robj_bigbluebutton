@@ -72,7 +72,6 @@ class ilBigBlueButtonConfigGUI extends ilPluginConfigGUI
             'enable_userlimit' => 0,
             'sess_max_concurrent' => 0,
             'sess_msg_concurrent' => '',
-            'curl_timeout' => 10,
         );
         $result = $ilDB->query("SELECT * FROM rep_robj_xbbb_conf");
         while ($record = $ilDB->fetchAssoc($result)) {
@@ -84,7 +83,6 @@ class ilBigBlueButtonConfigGUI extends ilPluginConfigGUI
             $values["enable_userlimit"] = $record["enable_userlimit"];
             $values["sess_max_concurrent"] = $record["sess_max_concurrent"];
             $values["sess_msg_concurrent"] = $record["sess_msg_concurrent"];
-            $values["curl_timeout"] = (int) ($record["curl_timeout"] ?? 10);
         }
 
 
@@ -171,16 +169,6 @@ class ilBigBlueButtonConfigGUI extends ilPluginConfigGUI
 
         $form->addItem($sess);
 
-        // connection timeout
-        $timeout_input = new ilNumberInputGUI($pl->txt("curl_timeout"), "curl_timeout");
-        $timeout_input->setRequired(true);
-        $timeout_input->setMinValue(1);
-        $timeout_input->setMaxValue(120);
-        $timeout_input->setSize(5);
-        $timeout_input->setInfo($pl->txt("curl_timeout_info"));
-        $timeout_input->setValue($values["curl_timeout"]);
-        $form->addItem($timeout_input);
-
         $form->addCommandButton("save", $lng->txt("save"));
 
         $form->setTitle($pl->txt("BigBlueButton_plugin_configuration"));
@@ -208,14 +196,13 @@ class ilBigBlueButtonConfigGUI extends ilPluginConfigGUI
             $enable_userlimit = (int) $form->getInput("enable_userlimit");
             $sess_max_concurrent = (int) $form->getInput("sess_max_concurrent");
             $sess_msg_concurrent = $form->getInput("sess_msg_concurrent");
-            $curl_timeout = max(1, (int) $form->getInput("curl_timeout"));
 
             // check if data exists -- decide to update or insert
             $result = $ilDB->query("SELECT * FROM rep_robj_xbbb_conf");
             $num = $ilDB->numRows($result);
             if ($num == 0) {
                 $ilDB->manipulate("INSERT INTO rep_robj_xbbb_conf ".
-                "(id, svrpublicurl, svrsalt, choose_recording, guestglobalchoose, sess_enable_max_concurrent, enable_userlimit, sess_max_concurrent, sess_msg_concurrent, curl_timeout) VALUES (".
+                "(id, svrpublicurl, svrsalt, choose_recording, guestglobalchoose, sess_enable_max_concurrent, enable_userlimit, sess_max_concurrent, sess_msg_concurrent) VALUES (".
                 $ilDB->quote(1, "integer").",".
                 $ilDB->quote($setPublicURL, "text").",".
                 $ilDB->quote($setSalt, "text").",".
@@ -224,8 +211,7 @@ class ilBigBlueButtonConfigGUI extends ilPluginConfigGUI
                 $ilDB->quote($sess_enable_max_concurrent, "integer").", ".
                 $ilDB->quote($enable_userlimit, "integer").", ".
                 $ilDB->quote($sess_max_concurrent, "integer").", ".
-                $ilDB->quote($sess_msg_concurrent, "text").", ".
-                $ilDB->quote($curl_timeout, "integer").
+                $ilDB->quote($sess_msg_concurrent, "text").
                 ")");
             } else {
                 $ilDB->manipulate(
@@ -237,8 +223,7 @@ class ilBigBlueButtonConfigGUI extends ilPluginConfigGUI
                     " sess_enable_max_concurrent = ".$ilDB->quote($sess_enable_max_concurrent, "integer").", ".
                     " enable_userlimit = ".$ilDB->quote($enable_userlimit, "integer").", ".
                     " sess_max_concurrent = ".$ilDB->quote($sess_max_concurrent, "integer").", ".
-                    " sess_msg_concurrent = ".$ilDB->quote($sess_msg_concurrent, "text").", ".
-                    " curl_timeout = ".$ilDB->quote($curl_timeout, "integer").
+                    " sess_msg_concurrent = ".$ilDB->quote($sess_msg_concurrent, "text").
                     " WHERE id = ".$ilDB->quote(1, "integer")
                 );
             }
