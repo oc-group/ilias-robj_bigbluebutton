@@ -46,6 +46,7 @@
 class ilObjBigBlueButtonGUI extends ilObjectPluginGUI
 {
     private ?ilPropertyFormGUI $form = null;
+    private ?ilLogger $logger = null;
     public bool $has_meeting_recordings = false;
 
     /**
@@ -55,6 +56,7 @@ class ilObjBigBlueButtonGUI extends ilObjectPluginGUI
     {
         // $this->tpl->addCss("./public/Customizing/global/plugins/Services/Repository/RepositoryObject/BigBlueButton/templates/bbb.css");
         $this->tpl->addCss($this->getPlugin()->getDirectory() . '/templates/bbb.css');
+        $this->logger = ilLoggerFactory::getLogger('xbbb');
     }
 
     /**
@@ -488,6 +490,7 @@ class ilObjBigBlueButtonGUI extends ilObjectPluginGUI
         try {
             $BBBHelper->endMeeting($this->object);
         } catch (Exception $e) {
+            $this->logger->error("Error ending meeting: " . $e->getMessage());
             $this->tpl->setOnScreenMessage(
                 ilGlobalTemplateInterface::MESSAGE_TYPE_FAILURE,
                 $this->txt("bbb_connection_error")
@@ -524,6 +527,7 @@ class ilObjBigBlueButtonGUI extends ilObjectPluginGUI
         try {
             $BBBHelper->createMeeting($this->object, isset($_POST["recordmeeting"]));
         } catch (Exception $e) {
+            $this->logger->error("Error starting meeting: " . $e->getMessage());
             $this->tpl->setOnScreenMessage(
                 ilGlobalTemplateInterface::MESSAGE_TYPE_FAILURE,
                 $this->txt("bbb_connection_error")
@@ -557,6 +561,7 @@ class ilObjBigBlueButtonGUI extends ilObjectPluginGUI
         try {
             $BBBHelper->deleteRecording($this->object, $recordID);
         } catch (Exception $e) {
+            $this->logger->error("Error deleting recording: " . $e->getMessage());
             $this->tpl->setOnScreenMessage(
                 ilGlobalTemplateInterface::MESSAGE_TYPE_FAILURE,
                 $this->txt("bbb_connection_error")
@@ -583,6 +588,7 @@ class ilObjBigBlueButtonGUI extends ilObjectPluginGUI
         try {
             $BBBHelper->publishRecordings($this->object, $recordID, $publish);
         } catch (Exception $e) {
+            $this->logger->error("Error publishing recording: " . $e->getMessage());
             $this->tpl->setOnScreenMessage(
                 ilGlobalTemplateInterface::MESSAGE_TYPE_FAILURE,
                 $this->txt("bbb_connection_error")

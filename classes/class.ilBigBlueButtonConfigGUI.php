@@ -71,7 +71,7 @@ class ilBigBlueButtonConfigGUI extends ilPluginConfigGUI
             'sess_enable_max_concurrent' => 0,
             'enable_userlimit' => 0,
             'sess_max_concurrent' => 0,
-            'sess_msg_concurrent' => '',
+            'sess_msg_concurrent' => ''
         );
         $result = $ilDB->query("SELECT * FROM rep_robj_xbbb_conf");
         while ($record = $ilDB->fetchAssoc($result)) {
