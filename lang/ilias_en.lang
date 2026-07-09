@@ -92,3 +92,4 @@ max_duration#:#Max. duration of the meeting
 guest_invite_info#:#You can invite guests using the following link:
 allow_download#:#Allow Download
 allow_download_info#:#For the download feature to work, an addon should be installed at the bbb-server. Please check the script at <a href="https://github.com/Minervis-GmbH/video-export">https://github.com/Minervis-GmbH/video-export</a>
+bbb_connection_error#:#The BigBlueButton server is currently unreachable. Please try again later or contact your administrator.

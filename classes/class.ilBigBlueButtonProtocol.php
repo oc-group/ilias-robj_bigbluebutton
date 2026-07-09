@@ -25,12 +25,32 @@ class ilBigBlueButtonProtocol
     private $avatar;
     private $user;
     private $meetings;
+    private bool $connectionError = false;
+    private string $connectionErrorMessage = '';
 
     public function __construct($object)
     {
         $this->object = $object;
         $this->bbb = new ilBBB($this->object->getSvrSalt(), $this->object->getSvrPublicURL());
-        $this->meetings = $this->bbb->getMeetings();
+        $this->bbb->setTimeOut(60);
+        try {
+            $this->meetings = $this->bbb->getMeetings();
+        } catch (Exception $e) {
+            $logger = ilLoggerFactory::getLogger('xbbb');
+            $logger->error('Error connecting to BigBlueButton server: ' . $e->getMessage());
+            $this->connectionError = true;
+            $this->connectionErrorMessage = $e->getMessage();
+        }
+    }
+
+    public function hasConnectionError(): bool
+    {
+        return $this->connectionError;
+    }
+
+    public function getConnectionErrorMessage(): string
+    {
+        return $this->connectionErrorMessage;
     }
     public function getAvatar()
     {

@@ -357,6 +357,6 @@ if (!$ilDB->tableColumnExists("rep_robj_xbbb_conf", "sess_msg_concurrent")
 		'length' => 1000,
 		'notnull' => false
 	));
-	
+
 }
 ?>
