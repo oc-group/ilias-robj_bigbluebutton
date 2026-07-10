@@ -32,7 +32,7 @@ class ilBigBlueButtonProtocol
     {
         $this->object = $object;
         $this->bbb = new ilBBB($this->object->getSvrSalt(), $this->object->getSvrPublicURL());
-        $this->bbb->setTimeOut(60);
+        $this->bbb->setTimeOut(30);
         try {
             $this->meetings = $this->bbb->getMeetings();
         } catch (Exception $e) {
