@@ -61,12 +61,15 @@ class ilBigBlueButtonProtocol
         $this->avatar = $avatar;
     }
 
-    public function getVideoDownloadStreamUrl(string $url)
+    public function getVideoDownloadStreamUrl(string $url): string
     {
-        $record_part = explode('playback/presentation/2.3/', $url);
-        $recordID = trim($record_part[1]);
-        $video_path = trim($record_part[0]) . "presentation/" . $recordID . "/" . $recordID . "_full.webm";
-        return $video_path ;
+        // Match any player version segment (was hardcoded to "2.3")
+        if (!preg_match('#^(.*)playback/presentation/[^/]+/([^/?]+)#', $url, $matches)) {
+            ilLoggerFactory::getLogger('xbbb')->warning('getVideoDownloadStreamUrl: could not parse presentation URL: ' . $url);
+            return '';
+        }
+        $recordID = trim($matches[2]);
+        return trim($matches[1]) . "presentation/" . $recordID . "/" . $recordID . "_full.webm";
     }
 
     public function getInviteUrl($title = "Guest")
