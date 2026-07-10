@@ -65,7 +65,8 @@ class ilBigBlueButtonProtocol
     {
         // Match any player version segment (was hardcoded to "2.3")
         if (!preg_match('#^(.*)playback/presentation/[^/]+/([^/?]+)#', $url, $matches)) {
-            return $url;
+            ilLoggerFactory::getLogger('xbbb')->warning('getVideoDownloadStreamUrl: could not parse presentation URL: ' . $url);
+            return '';
         }
         $recordID = trim($matches[2]);
         return trim($matches[1]) . "presentation/" . $recordID . "/" . $recordID . "_full.webm";
