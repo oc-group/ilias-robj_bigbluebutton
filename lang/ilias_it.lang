@@ -54,6 +54,7 @@ save#:#Salva
 edit#:#Modifica
 title#:#titolo
 status#:#stato
+offline#:#Offline
 saving_invoked#:#Salvato
 sever_not_reachable#:#Si è verificato un errore durante il tentativo di raggiungere il server. Verificare la validità dell'URL e del salt inseriti.
 choose_recording#:#Consenti registrazioni globalmente
